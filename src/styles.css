@@ -1,220 +1,55 @@
+/* Full-height shell so Monaco can own the available viewport without manual sizing. */
 :root {
-  color: #e8edf3;
-  background: #0e1117;
+  color: #1d2433;
+  background: #f6f7f9;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
 }
 
 button {
   font: inherit;
 }
 
-.app-shell {
+.monaco-loader {
+  /* Header button above a flexing editor area. */
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  min-height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(20, 28, 38, 0.96), rgba(14, 17, 23, 1) 34%),
-    #0e1117;
+  grid-template-rows: 48px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 18px 24px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.eyebrow {
-  margin: 0 0 4px;
-  color: #93c5fd;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-h1,
-h2,
-p {
-  margin-top: 0;
-}
-
-h1 {
-  margin-bottom: 0;
-  color: #f8fafc;
-  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
-  line-height: 1.1;
-  letter-spacing: 0;
-}
-
-h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  color: #dce6f2;
-  font-size: 0.9rem;
-  letter-spacing: 0;
-}
-
-.primary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid rgba(99, 210, 151, 0.45);
-  border-radius: 6px;
-  color: #07120d;
-  background: #63d297;
+.load-button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #cfd6e4;
+  background: #1f6feb;
+  color: #ffffff;
   cursor: pointer;
+  font-weight: 700;
 }
 
-.primary-button:hover {
-  background: #78e1a9;
+.load-button:hover {
+  background: #195fc9;
 }
 
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 31vw);
-  min-height: 0;
+.load-button:focus-visible {
+  outline: 3px solid #f2cc60;
+  outline-offset: -3px;
 }
 
 .editor-pane {
-  min-width: 0;
   min-height: 0;
-  border-right: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.inspector {
-  display: grid;
-  grid-template-rows: auto minmax(120px, 0.42fr) minmax(0, 1fr);
-  min-width: 0;
-  min-height: 0;
-  background: #151a22;
-}
-
-.status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 52px;
-  padding: 0 18px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-  font-weight: 700;
-}
-
-.status-ok {
-  color: #9ae6b4;
-}
-
-.status-error {
-  color: #fbbf24;
-}
-
-.diagnostics-panel,
-.output-panel {
-  min-height: 0;
-  padding: 16px 18px;
-  overflow: auto;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.output-panel {
-  border-bottom: 0;
-}
-
-.empty-state {
-  color: #95a3b5;
-  font-size: 0.92rem;
-}
-
-.diagnostics-list {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.diagnostics-list li {
-  display: grid;
-  gap: 4px;
-  padding: 10px 12px;
-  border: 1px solid rgba(251, 191, 36, 0.28);
-  border-radius: 6px;
-  background: rgba(251, 191, 36, 0.07);
-}
-
-.diagnostics-list strong {
-  color: #fcd34d;
-  font-size: 0.76rem;
-  letter-spacing: 0;
-}
-
-.diagnostics-list span {
-  color: #f5f0dd;
-  font-size: 0.9rem;
-}
-
-.diagnostics-list small {
-  color: #a8b3c2;
-}
-
-pre {
-  min-width: 0;
-  margin: 0;
-  padding: 14px;
-  overflow: auto;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 6px;
-  color: #d8dee9;
-  background: #0f141b;
-  font-size: 0.78rem;
-  line-height: 1.5;
-}
-
-@media (max-width: 980px) {
-  .workspace {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(480px, 58vh) minmax(420px, 42vh);
-  }
-
-  .editor-pane {
-    border-right: 0;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-  }
-
-  .inspector {
-    grid-template-rows: auto minmax(120px, 0.45fr) minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 560px) {
-  .topbar {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 16px;
-  }
-
-  .primary-button {
-    width: 100%;
-  }
 }

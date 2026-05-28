@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parsePrimRecProgram } from '.';
+import type { CoreExpression } from './types';
 
 describe('parsePrimRecProgram valid programs', () => {
   it('normalizes the addition example', () => {
@@ -448,7 +449,7 @@ rec(x, y) = primrec(base, step);`);
     expect(result.diagnostics).toEqual([]);
     let node = result.program?.functions[0].expression;
     for (let i = 0; i < 3; i++) {
-      node = (node as { kind: string; argument: unknown }).argument;
+      node = (node as { kind: string; argument: CoreExpression }).argument;
     }
     expect(node).toEqual({
       kind: 'Projection',
