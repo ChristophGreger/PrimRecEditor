@@ -1,5 +1,9 @@
 import type * as Monaco from 'monaco-editor';
 import {
+  getPrimRecDependencyCompletionContext,
+  getPrimRecDependencyCompletionSignatures,
+} from './primRecCompletion';
+import {
   getFunctionSignatures,
   getSemanticHover,
   LANGUAGE_ID,
@@ -160,6 +164,26 @@ export function registerPrimRecLanguage(monaco: MonacoApi) {
         endColumn: word.endColumn,
       };
       const signatures = getFunctionSignatures(model.getValue());
+      const primRecContext = getPrimRecDependencyCompletionContext(
+        model.getValue(),
+        model.getOffsetAt(position),
+      );
+
+      if (primRecContext) {
+        return {
+          suggestions: getPrimRecDependencyCompletionSignatures(
+            signatures,
+            primRecContext,
+          ).map((signature) => ({
+            label: signature.name,
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: signature.name,
+            detail: `${primRecContext.role} candidate: ${signature.name}/${signature.arity}`,
+            documentation: `Matches the required ${primRecContext.role} arity for this primrec expression.`,
+            range,
+          })),
+        };
+      }
 
       return {
         suggestions: [
