@@ -176,6 +176,15 @@ function validateExpression(
       return;
 
     case 'NumberLiteral':
+      if (!Number.isSafeInteger(expression.value)) {
+        context.diagnostics.push(
+          diagnostic(
+            'VALIDATION_UNSAFE_NUMBER_LITERAL',
+            `Numeric literal '${expression.raw}' is too large to evaluate safely.`,
+            expression.range,
+          ),
+        );
+      }
       return;
 
     case 'Call':
@@ -399,7 +408,7 @@ function normalizeExpression(
       };
 
     case 'NumberLiteral':
-      return normalizeNumber(expression.value);
+      return { kind: 'Number', value: expression.value };
 
     case 'Call': {
       const normalizedArgs = expression.args.map((arg) =>
@@ -428,12 +437,4 @@ function normalizeExpression(
     case 'Error':
       return { kind: 'Zero' };
   }
-}
-
-function normalizeNumber(value: number): CoreExpression {
-  let expression: CoreExpression = { kind: 'Zero' };
-  for (let index = 0; index < value; index += 1) {
-    expression = { kind: 'Successor', argument: expression };
-  }
-  return expression;
 }

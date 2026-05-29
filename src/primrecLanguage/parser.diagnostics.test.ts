@@ -89,6 +89,17 @@ describe('parsePrimRecProgram diagnostics', () => {
     });
   });
 
+  describe('numeric literal checks', () => {
+    it('rejects numeric literals outside the safe integer range', () => {
+      const result = parsePrimRecProgram('tooLarge() = 9007199254740992;');
+
+      expect(result.diagnostics.map((item) => item.code)).toContain(
+        'VALIDATION_UNSAFE_NUMBER_LITERAL',
+      );
+      expect(result.program).toBeUndefined();
+    });
+  });
+
   describe('forward references', () => {
     it('requires functions to be defined before use', () => {
       expect(codes('f(x) = g(x);\ng(x) = x;')).toContain(

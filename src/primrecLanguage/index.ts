@@ -79,7 +79,7 @@ function findExpressionHover(
 
     case 'NumberLiteral':
       if (containsPosition(expression.range, line, column)) {
-        return `**Natural number literal** \`${expression.raw}\`\n\nExpanded to zero and repeated successor applications in the normalized output.`;
+        return `**Natural number literal** \`${expression.raw}\`\n\nPreserved as a numeric constant in the normalized output.`;
       }
       return undefined;
 

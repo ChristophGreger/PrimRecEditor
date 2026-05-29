@@ -111,7 +111,7 @@ the normalized functions look like this:
 
 ## Core Expressions
 
-The normalized expression tree uses only primitive-recursive building blocks.
+The normalized expression tree uses primitive-recursive building blocks plus direct numeric constants for source literals.
 
 ### Projection
 
@@ -199,23 +199,20 @@ The recursion is always over the last parameter of `f`.
 
 ### Numeric Literals
 
-Natural number literals are enabled as syntactic sugar. They are expanded into the primitive core:
+Natural number literals are enabled as syntactic sugar and are preserved as direct numeric constants in `program`:
 
 ```text
-two(x) = 2;
+ten(x) = 10;
 ```
 
 ```json
 {
-  "kind": "Successor",
-  "argument": {
-    "kind": "Successor",
-    "argument": {
-      "kind": "Zero"
-    }
-  }
+  "kind": "Number",
+  "value": 10
 }
 ```
+
+`zero()` still normalizes to `{ "kind": "Zero" }`; only literal source text such as `0`, `1`, or `10` becomes a `Number` expression.
 
 ## Diagnostics And Safety Guarantees
 
@@ -227,6 +224,7 @@ When `program` is present, these rules have already been checked:
 - parameters are unique and in scope
 - calls target previously defined functions
 - function-call arities are correct
+- numeric literals fit in JavaScript's safe integer range
 - `zero()` and `succ(...)` use their fixed arities
 - `primrec(base, step)` only appears as a complete function body
 - `primrec` base and step arities match the current function arity

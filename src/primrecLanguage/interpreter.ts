@@ -143,6 +143,11 @@ class CompiledProgramImpl implements CompiledProgram {
 
   private compileExpression(expression: CoreExpression): CompiledFunction {
     switch (expression.kind) {
+      case 'Number': {
+        const value = toSafeNatural(expression.value);
+        return () => value;
+      }
+
       case 'Zero':
         return ZERO_FN;
 
@@ -410,6 +415,9 @@ function withMemo(fn: CompiledFunction): CompiledFunction {
 /** True if `expression` reads the given argument index anywhere. */
 function referencesIndex(expression: CoreExpression, index: number): boolean {
   switch (expression.kind) {
+    case 'Number':
+      return false;
+
     case 'Projection':
       return expression.index === index;
     case 'Successor':

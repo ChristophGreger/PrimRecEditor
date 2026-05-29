@@ -1,6 +1,6 @@
 # PrimRec Editor
 
-React + Vite + TypeScript editor for the primitive-recursive function language described in `Format_Specification.md`.
+React + Vite + TypeScript editor for the primitive-recursive function language described in `docs/Format_Specification.md`.
 
 The implementation follows a small language pipeline:
 

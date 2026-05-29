@@ -103,6 +103,7 @@ export interface FunctionSignature {
 
 export type CoreExpression =
   | { kind: 'Projection'; parameter: string; index: number }
+  | { kind: 'Number'; value: number }
   | { kind: 'Zero' }
   | { kind: 'Successor'; argument: CoreExpression }
   | { kind: 'Composition'; callee: string; args: CoreExpression[] }

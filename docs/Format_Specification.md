@@ -136,7 +136,7 @@ Expressions are built from:
 - variables
 - calls to previously defined functions
 - `primrec(base, step)`
-- natural number literals, if enabled as syntactic sugar
+- natural number literals as syntactic sugar
 
 Examples:
 
@@ -411,9 +411,9 @@ pred(succ(y)) = y
 
 ---
 
-# 14. Optional Numeric Literals
+# 14. Numeric Literals
 
-Natural number literals may be allowed as syntactic sugar.
+Natural number literals are allowed as syntactic sugar for constant natural-number functions.
 
 For example:
 
@@ -421,23 +421,26 @@ For example:
 0
 1
 2
+10
 ```
 
-can be expanded into `zero` and repeated `succ`.
+They have the same mathematical meaning as `zero` and repeated `succ`, but the parser keeps them as direct numeric constants in the normalized output.
 
 Example:
 
 ```text id="jlwm8k"
 one(x) = 1;
+
+ten() = 10;
 ```
 
-is shorthand for:
+`one(x) = 1;` is semantically equivalent to:
 
 ```text id="jlwm8l"
 one(x) = succ(zero());
 ```
 
-Numeric literals are optional and not part of the primitive core.
+Numeric literals must be natural numbers written with digits `0-9`. Negative numbers and decimal numbers are not valid literals. Implementations may reject literals that exceed their safe integer range.
 
 ---
 
