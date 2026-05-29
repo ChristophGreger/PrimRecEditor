@@ -107,7 +107,33 @@ export type CoreExpression =
   | { kind: 'Zero' }
   | { kind: 'Successor'; argument: CoreExpression }
   | { kind: 'Composition'; callee: string; args: CoreExpression[] }
-  | { kind: 'PrimitiveRecursion'; base: string; step: string };
+  | PrimitiveRecursionCoreExpression;
+
+export interface PrimitiveRecursionCoreExpression {
+  kind: 'PrimitiveRecursion';
+  base: string;
+  step: string;
+  idiom?: PrimitiveRecursionIdiom;
+}
+
+export type PrimitiveRecursionIdiom =
+  | {
+      kind: 'Predecessor';
+      counterIndex: number;
+      previousIndex: number;
+    }
+  | {
+      kind: 'ConstantAfterFirst';
+      counterIndex: number;
+      previousIndex: number;
+      expression: CoreExpression;
+    }
+  | {
+      kind: 'LinearRecurrence';
+      counterIndex: number;
+      previousIndex: number;
+      increment: CoreExpression;
+    };
 
 export interface NormalizedFunction {
   name: string;

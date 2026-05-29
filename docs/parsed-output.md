@@ -7,6 +7,8 @@ The editor exposes two layers:
 
 Consumers should prefer `program` when they want to interpret a valid primitive-recursive program. The raw `ast` is useful for editor features, recovery, and diagnostics because it still exists when the source is invalid.
 
+`recognizeIdiomsInParseResult(result)` can be applied to this parse output before the hard interpreter preprocessing step. It returns the same top-level shape, but recognized primitive-recursion bodies in `program.functions` receive an `idiom` annotation. It does not compile functions, evaluate anything, or change diagnostics.
+
 ## Top-Level Shape
 
 ```ts
@@ -217,6 +219,46 @@ The preceding `plusBase`, `plusStep`, and `plus` definitions are needed because 
 ## Core Expressions
 
 The normalized expression tree uses primitive-recursive building blocks plus direct numeric constants for source literals.
+
+### Idiom-Annotated Output
+
+After `recognizeIdiomsInParseResult(parsePrimRecProgram(source))`, the output is still a `ParseResult`. The only changed part is `program`, and only when parsing and validation succeeded.
+
+```ts
+interface PrimitiveRecursionCoreExpression {
+  kind: 'PrimitiveRecursion';
+  base: string;
+  step: string;
+  idiom?: PrimitiveRecursionIdiom;
+}
+```
+
+Supported `idiom.kind` values:
+
+- `Predecessor`: the step returns the recursion counter directly.
+- `ConstantAfterFirst`: after the first recursive step, the result is a fixed expression that no longer depends on the counter or previous value.
+- `LinearRecurrence`: the step has the form `previous + C`, so the closed form is `base + counter * C`.
+
+Example for canonical addition:
+
+```json
+{
+  "kind": "PrimitiveRecursion",
+  "base": "plusBase",
+  "step": "plusStep",
+  "idiom": {
+    "kind": "LinearRecurrence",
+    "counterIndex": 1,
+    "previousIndex": 2,
+    "increment": {
+      "kind": "Successor",
+      "argument": { "kind": "Number", "value": 0 }
+    }
+  }
+}
+```
+
+The rest of the function object keeps the normal `NormalizedFunction` fields: `name`, `arity`, `parameters`, `dependencies`, and `range`.
 
 ### Projection
 

@@ -129,4 +129,8 @@ function formatFunctionHover(definition: FunctionDefinition): string {
 }
 
 export * from './types';
+export {
+  recognizeIdiomsInParseResult,
+  recognizeIdiomsInProgram,
+} from './idioms';
 export { LANGUAGE_ID } from './constants';
