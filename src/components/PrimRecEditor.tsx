@@ -7,7 +7,7 @@ import {
   updatePrimRecMarkers,
 } from '../editor/primRecMonaco';
 import { COMPLETION_EXAMPLE } from '../primrecLanguage/constants';
-import { parsePrimRecProgram } from '../primrecLanguage';
+import { parseCompleteProgram } from '../primrecLanguage';
 
 export function PrimRecEditor() {
   const [code, setCode] = useState(COMPLETION_EXAMPLE);
@@ -24,7 +24,7 @@ export function PrimRecEditor() {
   }, []);
 
   function handleLoad() {
-    console.log('Parsed primitive recursive program:', parsePrimRecProgram(code));
+    console.log('Parsed primitive recursive program:', parseCompleteProgram(code));
   }
 
   return (

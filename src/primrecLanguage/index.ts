@@ -1,6 +1,11 @@
 import { parseSyntax } from './primrecParsing/parser';
 import { containsPosition } from './primrecParsing/ranges';
 import { validateAndNormalize } from './primrecParsing/validation';
+import {
+  parsePostconditions,
+  stripPostconditionSectionsForPrimRec,
+  type PostconditionParseResult,
+} from './postconditions';
 import type {
   Expression,
   FunctionDefinition,
@@ -9,8 +14,14 @@ import type {
   ProgramAst,
 } from './types';
 
+export interface CompleteParseResult {
+  primrec: ParseResult;
+  postconditions: PostconditionParseResult;
+  diagnostics: ParseResult['diagnostics'];
+}
+
 export function parsePrimRecProgram(source: string): ParseResult {
-  const syntax = parseSyntax(source);
+  const syntax = parseSyntax(stripPostconditionSectionsForPrimRec(source));
   const semantic = validateAndNormalize(syntax.ast);
   const diagnostics = [...syntax.diagnostics, ...semantic.diagnostics];
 
@@ -24,8 +35,19 @@ export function parsePrimRecProgram(source: string): ParseResult {
   };
 }
 
+export function parseCompleteProgram(source: string): CompleteParseResult {
+  const primrec = parsePrimRecProgram(source);
+  const postconditions = parsePostconditions(source, getFunctionSignatures(source));
+
+  return {
+    primrec,
+    postconditions,
+    diagnostics: [...primrec.diagnostics, ...postconditions.diagnostics],
+  };
+}
+
 export function getFunctionSignatures(source: string): FunctionSignature[] {
-  const parsed = parseSyntax(source);
+  const parsed = parseSyntax(stripPostconditionSectionsForPrimRec(source));
   return parsed.ast.definitions.map((definition) => ({
     name: definition.name,
     arity: definition.params.length,
@@ -39,7 +61,7 @@ export function getSemanticHover(
   line: number,
   column: number,
 ): string | undefined {
-  const parsed = parseSyntax(source);
+  const parsed = parseSyntax(stripPostconditionSectionsForPrimRec(source));
   const definition = parsed.ast.definitions.find((item) =>
     containsPosition(item.nameRange, line, column),
   );
@@ -138,3 +160,4 @@ export {
   primRecProgramToHornSmt2Parts,
 } from './hornSmt2';
 export { LANGUAGE_ID } from './constants';
+export * from './postconditions';

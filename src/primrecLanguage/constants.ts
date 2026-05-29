@@ -37,4 +37,23 @@ pred(x) = primrec(predBase, predStep);
 
 square(x) =
   mul(x, x);
+
+# Postconditions
+
+post plus(x, y) -> r {
+  r == x + y;
+}
+
+post mul(x, y) -> r {
+  r == x * y;
+}
+
+post pred(x) -> r {
+  x == 0 => r == 0;
+  x > 0 => r == x - 1;
+}
+
+post square(x) -> r {
+  r == x * x;
+}
 `;

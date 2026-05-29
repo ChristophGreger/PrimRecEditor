@@ -4,10 +4,15 @@ import {
   getPrimRecDependencyCompletionSignatures,
 } from './primRecCompletion';
 import {
+  collectPostconditionSemanticTokens,
+  getPostconditionCompletionItems,
+  POSTCONDITION_SEMANTIC_TOKEN_TYPES,
+} from './postconditionMonaco';
+import {
   getFunctionSignatures,
   getSemanticHover,
   LANGUAGE_ID,
-  parsePrimRecProgram,
+  parseCompleteProgram,
 } from '../primrecLanguage';
 import type {
   Diagnostic,
@@ -38,6 +43,7 @@ const SEMANTIC_TOKEN_TYPES = [
   'variable.reference',
   'keyword.primitive',
   'number.literal',
+  ...POSTCONDITION_SEMANTIC_TOKEN_TYPES,
 ] as const;
 
 const SEMANTIC_TOKEN_LEGEND: Monaco.languages.SemanticTokensLegend = {
@@ -65,33 +71,62 @@ export function registerPrimRecLanguage(monaco: MonacoApi) {
       lineComment: '#',
       blockComment: ['/*', '*/'],
     },
-    brackets: [['(', ')']],
+    brackets: [
+      ['(', ')'],
+      ['{', '}'],
+    ],
     autoClosingPairs: [
       { open: '(', close: ')' },
+      { open: '{', close: '}' },
       { open: '/*', close: '*/' },
     ],
-    surroundingPairs: [{ open: '(', close: ')' }],
+    surroundingPairs: [
+      { open: '(', close: ')' },
+      { open: '{', close: '}' },
+    ],
   });
 
   monaco.languages.setMonarchTokensProvider(LANGUAGE_ID, {
     defaultToken: '',
     tokenPostfix: '.primrec',
     builtins: ['zero', 'succ'],
-    keywords: ['primrec'],
+    keywords: ['primrec', 'post', 'forall', 'exists', 'let', 'in', 'true', 'false'],
     tokenizer: {
       root: [
         [/#.*$/, 'comment'],
         [/\/\*/, 'comment', '@comment'],
+        [/\bsmt\b(?=\s*\{)/, 'keyword.smt', '@smt'],
         [/\s+/, ''],
         [/\b[0-9]+[A-Za-z_][A-Za-z0-9_]*\b/, 'invalid'],
+        [/\bpost\b/, 'keyword.postcondition'],
+        [/\b(forall|exists)\b/, 'postcondition.quantifier'],
+        [/\b(let|in|true|false)\b/, 'keyword.postcondition'],
         [/\bprimrec\b(?=\s*\()/, 'keyword.primitive'],
+        [/\b(abs|divisible|distinct|ite)\b(?=\s*\()/, 'postcondition.builtin'],
+        [/\b(div|mod|xor)\b/, 'postcondition.operator'],
         [/\b(zero|succ)\b(?=\s*\()/, 'function.builtin'],
         [/[A-Za-z_][A-Za-z0-9_]*(?=\s*\()/, 'function.call'],
         [/[A-Za-z_][A-Za-z0-9_]*/, 'variable'],
-        [/=/, 'operator'],
-        [/[(),;]/, 'delimiter'],
+        [/<=>|=>|->|==|!=|<=|>=|&&|\|\||\*\*|[+\-*<>!=]/, 'operator'],
+        [/[(){},;.]/, 'delimiter'],
         [/[0-9]+/, 'number'],
         [/./, 'invalid'],
+      ],
+      smt: [
+        [/\{/, 'delimiter.bracket', '@smtBody'],
+        [/\s+/, ''],
+        [/./, 'invalid'],
+      ],
+      smtBody: [
+        [/\}/, 'delimiter.bracket', '@popall'],
+        [/;.*$/, 'comment'],
+        [/[()]/, 'delimiter.parenthesis'],
+        [/\b(assert|forall|exists|declare-fun|declare-sort|define-fun|set-logic|check-sat)\b/, 'keyword.smt'],
+        [/[+\-*/=<>&|!]+/, 'operator'],
+        [/[0-9]+/, 'number'],
+        [/[A-Za-z_.$?~!@%^&*+\-=<>/][A-Za-z0-9_.$?~!@%^&*+\-=<>/]*/, 'variable'],
+        [/\s+/, ''],
+        [/./, 'string'],
       ],
       comment: [
         [/[^/*]+/, 'comment'],
@@ -113,6 +148,13 @@ export function registerPrimRecLanguage(monaco: MonacoApi) {
       { token: 'parameter.definition', foreground: '9CDCFE' },
       { token: 'variable.reference', foreground: 'D8DEE9' },
       { token: 'keyword.primitive', foreground: 'C586C0', fontStyle: 'bold' },
+      { token: 'keyword.postcondition', foreground: 'C586C0', fontStyle: 'bold' },
+      { token: 'keyword.smt', foreground: 'C586C0', fontStyle: 'bold' },
+      { token: 'postcondition.function', foreground: '4FC1FF', fontStyle: 'bold' },
+      { token: 'postcondition.result', foreground: '9CDCFE', fontStyle: 'bold' },
+      { token: 'postcondition.quantifier', foreground: 'C586C0', fontStyle: 'bold' },
+      { token: 'postcondition.operator', foreground: 'D4D4D4' },
+      { token: 'postcondition.builtin', foreground: 'DCDCAA' },
       { token: 'variable', foreground: 'D8DEE9' },
       { token: 'number', foreground: 'B5CEA8' },
       { token: 'number.literal', foreground: 'B5CEA8' },
@@ -215,6 +257,17 @@ export function registerPrimRecLanguage(monaco: MonacoApi) {
             documentation: 'Primitive recursion over the last function argument.',
             range,
           },
+          {
+            label: 'post',
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: 'post ${1:functionName}(${2:x}) -> ${3:r} {\n  ${3:r} == ${2:x};\n}',
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            detail: 'post function(args) -> result',
+            documentation: 'Adds a PrimRec postcondition block.',
+            range,
+          },
+          ...getPostconditionCompletionItems(monaco, range),
           ...signatures.map((signature) => ({
             label: signature.name,
             kind: monaco.languages.CompletionItemKind.Function,
@@ -242,7 +295,7 @@ export function updatePrimRecMarkers(
     return;
   }
 
-  const parsed = parsePrimRecProgram(model.getValue());
+  const parsed = parseCompleteProgram(model.getValue());
   monaco.editor.setModelMarkers(
     model,
     MARKER_OWNER,
@@ -255,11 +308,14 @@ function signatureParameterSnippet(arity: number): string {
 }
 
 function collectSemanticTokens(source: string): SemanticTokenSpan[] {
-  const parsed = parsePrimRecProgram(source);
+  const parsed = parseCompleteProgram(source);
   const tokens: SemanticTokenSpan[] = [];
 
-  parsed.ast.definitions.forEach((definition) => {
+  parsed.primrec.ast.definitions.forEach((definition) => {
     collectDefinitionSemanticTokens(definition, tokens);
+  });
+  parsed.postconditions.ast.postconditions.forEach((definition) => {
+    collectPostconditionSemanticTokens(definition, tokens);
   });
 
   return tokens.sort((left, right) => {
