@@ -133,4 +133,8 @@ export {
   recognizeIdiomsInParseResult,
   recognizeIdiomsInProgram,
 } from './idioms';
+export {
+  primRecProgramToHornSmt2,
+  primRecProgramToHornSmt2Parts,
+} from './hornSmt2';
 export { LANGUAGE_ID } from './constants';
