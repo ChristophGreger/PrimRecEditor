@@ -40,7 +40,7 @@ The parts are emitted in this order:
 The helper predicate is deliberately named with a quoted SMT-LIB symbol:
 
 ```smt2
-(define-fun |primrec.Nat| ((x Int)) Bool
+(define-fun _nat ((x Int)) Bool
   (>= x 0))
 ```
 
@@ -75,8 +75,8 @@ is represented as:
 All quantified variables in generated rules are constrained to natural numbers:
 
 ```smt2
-(|primrec.Nat| x)
-(|primrec.Nat| r)
+(_nat x)
+(_nat r)
 ```
 
 The Horn clauses should be read under CHC / least-fixpoint semantics. Under that
@@ -171,13 +171,13 @@ Generated Horn shape:
            (arg1 Int) (arg0_2 Int))
     (=>
       (and
-        (|primrec.Nat| x)
-        (|primrec.Nat| n)
-        (|primrec.Nat| r)
-        (|primrec.Nat| arg0)
-        (|primrec.Nat| arg0_1)
-        (|primrec.Nat| arg1)
-        (|primrec.Nat| arg0_2)
+        (_nat x)
+        (_nat n)
+        (_nat r)
+        (_nat arg0)
+        (_nat arg0_1)
+        (_nat arg1)
+        (_nat arg0_2)
         (= arg0_1 x)
         (h arg0_1 arg0)
         (= arg0_2 n)
@@ -228,10 +228,10 @@ SMT-LIB shape:
   (forall ((x1 Int) ... (xk Int) (y Int) (r Int))
     (=>
       (and
-        (|primrec.Nat| x1)
+        (_nat x1)
         ...
-        (|primrec.Nat| y)
-        (|primrec.Nat| r)
+        (_nat y)
+        (_nat r)
         (= y 0)
         (base x1 ... xk r))
       (f x1 ... xk y r))))
@@ -256,12 +256,12 @@ SMT-LIB shape:
            (previousCounter Int) (previous Int))
     (=>
       (and
-        (|primrec.Nat| x1)
+        (_nat x1)
         ...
-        (|primrec.Nat| counter)
-        (|primrec.Nat| r)
-        (|primrec.Nat| previousCounter)
-        (|primrec.Nat| previous)
+        (_nat counter)
+        (_nat r)
+        (_nat previousCounter)
+        (_nat previous)
         (= counter (+ previousCounter 1))
         (f x1 ... xk previousCounter previous)
         (step x1 ... xk previousCounter previous r))
@@ -474,7 +474,7 @@ base/step arity compatibility
 - Composition is lowered with fresh temporary result variables.
 - Generic `primrec` emits base and step Horn rules.
 - Recognized idioms emit closed Horn rules instead of recursive rules.
-- All quantified variables are constrained with `|primrec.Nat|`.
+- All quantified variables are constrained with `_nat`.
 - Fresh names avoid collisions with user parameters such as `r`.
 - The internal natural-number helper uses a quoted name to avoid collisions with
   user functions.

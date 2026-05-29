@@ -17,7 +17,7 @@ describe('primRecProgramToHornSmt2', () => {
     const parts = primRecProgramToHornSmt2Parts(parsed);
 
     expect(parts[0]).toBe('(set-logic HORN)');
-    expect(parts[1]).toContain('(define-fun |primrec.Nat|');
+    expect(parts[1]).toContain('(define-fun _nat');
     expect(parts[2]).toBe('(declare-fun id (Int Int) Bool)');
     expect(parts[3]).toContain('(id x r)');
   });
@@ -49,9 +49,9 @@ f(x, n) = g(h(x), z(n));`);
   it('does not collide with user functions named Nat', () => {
     const smt2 = generate('Nat(x) = x;');
 
-    expect(smt2).toContain('(define-fun |primrec.Nat|');
+    expect(smt2).toContain('(define-fun _nat');
     expect(smt2).toContain('(declare-fun Nat (Int Int) Bool)');
-    expect(smt2).toContain('(|primrec.Nat| x)');
+    expect(smt2).toContain('(_nat x)');
     expect(smt2).toContain('(Nat x r)');
   });
 

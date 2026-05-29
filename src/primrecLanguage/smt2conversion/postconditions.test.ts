@@ -27,8 +27,8 @@ post id(x) -> r {
     expect(smt2).toContain('(id x r)');
     expect(smt2).toContain('(not (= r x))');
     expect(smt2).toContain('false');
-    expect(smt2).toContain('(|primrec.Nat| x)');
-    expect(smt2).toContain('(|primrec.Nat| r)');
+    expect(smt2).toContain('(_nat x)');
+    expect(smt2).toContain('(_nat r)');
   });
 
   it('emits one violation clause for each formula statement', () => {
@@ -68,8 +68,8 @@ post double(x) -> r {
     expect(smt2).toContain('(id x callResult)');
     expect(smt2).toContain('(id callResult callResult_1)');
     expect(smt2).toContain('(not (= r callResult_1))');
-    expect(smt2).toContain('(|primrec.Nat| callResult)');
-    expect(smt2).toContain('(|primrec.Nat| callResult_1)');
+    expect(smt2).toContain('(_nat callResult)');
+    expect(smt2).toContain('(_nat callResult_1)');
   });
 
   it('renders boolean, comparison, and arithmetic operators in SMT-LIB form', () => {
@@ -118,7 +118,7 @@ post id(x) -> r {
 
     expect(smt2).toContain('(id x callResult)');
     expect(smt2).toContain('(= q callResult)');
-    expect(smt2).toContain('(|primrec.Nat| callResult)');
+    expect(smt2).toContain('(_nat callResult)');
   });
 
   it('lowers expression-level lets without leaking source names', () => {
@@ -138,8 +138,8 @@ post id(x) -> r {
   exists witness. witness == r;
 }`);
 
-    expect(smt2).toContain('(forall ((d Int)) (=> (|primrec.Nat| d) (=> (<= d x) (<= d r))))');
-    expect(smt2).toContain('(exists ((witness Int)) (and (|primrec.Nat| witness)');
+    expect(smt2).toContain('(forall ((d Int)) (=> (_nat d) (=> (<= d x) (<= d r))))');
+    expect(smt2).toContain('(exists ((witness Int)) (and (_nat witness)');
     expect(smt2).toContain('(= witness r)');
   });
 
@@ -188,7 +188,7 @@ post id(x) -> r {
     const smt2 = parts.join('\n\n');
 
     expect(parts[0]).toBe('(set-logic HORN)');
-    expect(smt2).toContain('(define-fun |primrec.Nat|');
+    expect(smt2).toContain('(define-fun _nat');
     expect(smt2).toContain('(declare-fun id (Int Int) Bool)');
     expect(smt2).toContain('(id x r)');
     expect(smt2).toContain('(declare-fun magic (Int Int) Bool)');

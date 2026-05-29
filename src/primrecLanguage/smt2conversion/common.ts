@@ -1,6 +1,6 @@
 export const HORN_LOGIC_DECLARATION = '(set-logic HORN)';
 
-export const NAT_PREDICATE = '|primrec.Nat|';
+export const NAT_PREDICATE = '_nat';
 
 export const NAT_DEFINITION = `(define-fun ${NAT_PREDICATE} ((x Int)) Bool
   (>= x 0))`;
