@@ -97,7 +97,7 @@ post id(x) -> r {
     );
   });
 
-  it('renders divisible, abs, distinct, ite, and exponentiation builtins', () => {
+  it('renders divisible, abs, distinct, ite, and exponentiation in SMT-LIB form', () => {
     const smt2 = generatePostconditions(`id(x) = x;
 post id(x) -> r {
   distinct(abs(r - x), 0) && divisible(2, r) && r == ite(x == 0, 0, x ** 2);
@@ -105,7 +105,10 @@ post id(x) -> r {
 
     expect(smt2).toContain('(distinct (abs (- r x)) 0)');
     expect(smt2).toContain('((_ divisible 2) r)');
-    expect(smt2).toContain('(ite (= x 0) 0 (^ x 2))');
+    expect(smt2).toContain('(declare-fun __primrec_pow (Int Int Int) Bool)');
+    expect(smt2).toContain('(__primrec_pow x 2 powResult)');
+    expect(smt2).toContain('(ite (= x 0) 0 powResult)');
+    expect(smt2).not.toContain('(^');
   });
 
   it('makes statement-level lets available to later formulas', () => {

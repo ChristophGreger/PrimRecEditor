@@ -120,7 +120,7 @@ ite      -> ite
 
 ## 4. Integer/Nat Terms
 
-The language supports the SMT-LIB `Ints` arithmetic operators:
+The language supports natural-number literals and arithmetic term syntax:
 
 ```text
 0
@@ -136,6 +136,9 @@ x mod y
 abs(x)
 x ** y
 ```
+
+All operators in this list except `**` lower directly to SMT-LIB `Ints`
+operators. Exponentiation is lowered separately as described below.
 
 Comparisons:
 
@@ -157,6 +160,22 @@ where `n` must be a positive numeral. It translates to SMT-LIB:
 ```smt
 ((_ divisible n) x)
 ```
+
+Exponentiation uses readable syntax:
+
+```text
+x ** y
+```
+
+SMT-LIB `Int` does not define a built-in exponentiation operator. The compiler
+therefore lowers `**` to an auxiliary Horn relation:
+
+```smt
+(__primrec_pow x y powResult)
+```
+
+and uses `powResult` in the surrounding term. This avoids non-standard symbols
+such as `^`, which Eldarica does not parse as integer exponentiation.
 
 Example:
 

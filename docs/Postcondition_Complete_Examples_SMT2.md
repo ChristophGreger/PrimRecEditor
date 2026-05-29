@@ -583,13 +583,36 @@ The output was generated with the project converter exposed by `sourceToHornSmt2
              (_exp arg0 arg1 r))
         (_pow3 n r))))
 
+(declare-fun __primrec_pow (Int Int Int) Bool)
+
 (assert
-  (forall ((x Int) (y Int) (r Int))
+  (forall ((base Int) (result Int))
+    (=> (and (nat base)
+             (nat result)
+             (= result 1))
+        (__primrec_pow base 0 result))))
+
+(assert
+  (forall ((base Int) (exp Int) (previousExp Int) (previous Int) (result Int))
+    (=> (and (nat base)
+             (nat exp)
+             (nat previousExp)
+             (nat previous)
+             (nat result)
+             (= exp (+ previousExp 1))
+             (__primrec_pow base previousExp previous)
+             (= result (* previous base)))
+        (__primrec_pow base exp result))))
+
+(assert
+  (forall ((x Int) (y Int) (r Int) (powResult Int))
     (=> (and (nat x)
              (nat y)
              (nat r)
+             (nat powResult)
              (_exp x y r)
-             (not (= r (^ x y))))
+             (__primrec_pow x y powResult)
+             (not (= r powResult)))
         false)))
 
 (assert
@@ -612,19 +635,23 @@ The output was generated with the project converter exposed by `sourceToHornSmt2
         false)))
 
 (assert
-  (forall ((n Int) (r Int))
+  (forall ((n Int) (r Int) (powResult Int))
     (=> (and (nat n)
              (nat r)
+             (nat powResult)
              (_pow2 n r)
-             (not (= r (^ 2 n))))
+             (__primrec_pow 2 n powResult)
+             (not (= r powResult)))
         false)))
 
 (assert
-  (forall ((n Int) (r Int))
+  (forall ((n Int) (r Int) (powResult Int))
     (=> (and (nat n)
              (nat r)
+             (nat powResult)
              (_pow3 n r)
-             (not (= r (^ 3 n))))
+             (__primrec_pow 3 n powResult)
+             (not (= r powResult)))
         false)))
 ```
 

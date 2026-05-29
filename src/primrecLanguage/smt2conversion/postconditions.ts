@@ -17,6 +17,8 @@ import {
   unique,
 } from './common';
 
+const POWER_RELATION = '__primrec_pow';
+
 interface RenderedPostExpression {
   text: string;
   conditions: string[];
@@ -44,7 +46,6 @@ const ARITHMETIC_BINARY_OPERATORS = new Map<string, string>([
   ['*', '*'],
   ['div', 'div'],
   ['mod', 'mod'],
-  ['**', '^'],
 ]);
 
 const COMPARISON_BINARY_OPERATORS = new Map<string, string>([
@@ -62,11 +63,17 @@ export function postconditionProgramToHornSmt2Parts(
     throw new Error('Cannot generate Horn SMT-LIB for invalid postconditions.');
   }
 
+  const support = new PostconditionSmtSupport();
+  const postconditionParts = result.ast.postconditions.flatMap((definition) =>
+    renderPostconditionDefinition(definition, support),
+  );
+
   return [
     ...result.ast.smtBlocks
       .map((block) => renderRawSmtBlock(block.text))
       .filter((block): block is string => block !== undefined),
-    ...result.ast.postconditions.flatMap(renderPostconditionDefinition),
+    ...support.renderParts(),
+    ...postconditionParts,
   ];
 }
 
@@ -78,11 +85,16 @@ export function postconditionProgramToHornSmt2(
 
 export function renderPostconditionDefinition(
   definition: PostconditionDefinition,
+  support?: PostconditionSmtSupport,
 ): string[] {
-  const renderer = new PostExpressionRenderer([
-    ...definition.params.map((param) => param.name),
-    definition.result.name,
-  ]);
+  const localSupport = support ?? new PostconditionSmtSupport();
+  const renderer = new PostExpressionRenderer(
+    [
+      ...definition.params.map((param) => param.name),
+      definition.result.name,
+    ],
+    localSupport,
+  );
   const frame: PostconditionFrame = {
     conditions: [],
     variables: [],
@@ -106,7 +118,7 @@ export function renderPostconditionDefinition(
     }
   }
 
-  return clauses;
+  return support ? clauses : [...localSupport.renderParts(), ...clauses];
 }
 
 function renderStatementLet(
@@ -177,9 +189,11 @@ function renderPostconditionViolationClause(
 class PostExpressionRenderer {
   private readonly scopes: Map<string, string>[] = [new Map()];
   private readonly used: Set<string>;
+  private readonly support: PostconditionSmtSupport;
 
-  constructor(usedNames: readonly string[]) {
+  constructor(usedNames: readonly string[], support: PostconditionSmtSupport) {
     this.used = new Set(usedNames);
+    this.support = support;
     usedNames.forEach((name) => this.bindName(name, name));
   }
 
@@ -256,6 +270,21 @@ class PostExpressionRenderer {
         left,
         right,
       );
+    }
+
+    if (expression.operator === '**') {
+      this.support.requirePowerRelation();
+      const result = this.fresh('powResult');
+      return {
+        text: result,
+        conditions: [
+          ...left.conditions,
+          ...right.conditions,
+          relationAtom(POWER_RELATION, [left.text, right.text, result]),
+        ],
+        variables: [...left.variables, ...right.variables, result],
+        natVariables: [...left.natVariables, ...right.natVariables, result],
+      };
     }
 
     const operator =
@@ -425,4 +454,36 @@ function combineExpressions(
     variables: expressions.flatMap((expression) => expression.variables),
     natVariables: expressions.flatMap((expression) => expression.natVariables),
   };
+}
+
+class PostconditionSmtSupport {
+  private needsPowerRelation = false;
+
+  requirePowerRelation() {
+    this.needsPowerRelation = true;
+  }
+
+  renderParts(): string[] {
+    if (!this.needsPowerRelation) {
+      return [];
+    }
+
+    return [
+      `(declare-fun ${POWER_RELATION} (Int Int Int) Bool)`,
+      renderHornClause({
+        variables: ['base', 'result'],
+        conditions: ['(= result 1)'],
+        head: relationAtom(POWER_RELATION, ['base', '0', 'result']),
+      }),
+      renderHornClause({
+        variables: ['base', 'exp', 'previousExp', 'previous', 'result'],
+        conditions: [
+          '(= exp (+ previousExp 1))',
+          relationAtom(POWER_RELATION, ['base', 'previousExp', 'previous']),
+          '(= result (* previous base))',
+        ],
+        head: relationAtom(POWER_RELATION, ['base', 'exp', 'result']),
+      }),
+    ];
+  }
 }
