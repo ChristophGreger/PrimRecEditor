@@ -1,6 +1,6 @@
 export const HORN_LOGIC_DECLARATION = '(set-logic HORN)';
 
-export const NAT_PREDICATE = '_nat';
+export const NAT_PREDICATE = 'nat';
 
 export const NAT_DEFINITION = `(define-fun ${NAT_PREDICATE} ((x Int)) Bool
   (>= x 0))`;
@@ -41,6 +41,10 @@ export function renderAnd(items: readonly string[]): string {
 
 export function relationAtom(name: string, args: readonly string[]): string {
   return `(${name} ${args.join(' ')})`;
+}
+
+export function primRecRelationName(name: string): string {
+  return `_${name}`;
 }
 
 export function freshName(base: string, used: Set<string>): string {

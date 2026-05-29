@@ -225,7 +225,7 @@ For Horn clauses, PrimRec functions should be encoded relationally. A function
 `mul(x, y) -> r` becomes a relation:
 
 ```smt
-(declare-fun mul (Int Int Int) Bool)
+(declare-fun _mul (Int Int Int) Bool)
 ```
 
 A term-style call:
@@ -238,7 +238,7 @@ can be lowered by introducing a fresh value:
 
 ```smt
 (exists ((t Int))
-  (and (mul x x t)
+  (and (_mul x x t)
        (= r t)))
 ```
 

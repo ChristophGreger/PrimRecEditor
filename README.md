@@ -26,3 +26,10 @@ In the browser console, the same conversion is exposed as:
 ```js
 primrecToSmt2('id(x) = x; post id(x) -> r { r == x; }')
 ```
+
+To print the generated SMT-LIB with visible line breaks and indentation in the
+browser console:
+
+```js
+printToSmt2('id(x) = x; post id(x) -> r { r == x; }')
+```

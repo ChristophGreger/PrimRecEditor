@@ -9,6 +9,7 @@ import type {
 import {
   freshName,
   NAT_PREDICATE,
+  primRecRelationName,
   relationAtom,
   renderAnd,
   renderHornClause,
@@ -164,7 +165,7 @@ function renderPostconditionViolationClause(
     ],
     natVariables: [...visibleVariables, ...frame.natVariables, ...rendered.natVariables],
     conditions: [
-      relationAtom(definition.functionName, [...params, result]),
+      relationAtom(primRecRelationName(definition.functionName), [...params, result]),
       ...frame.conditions,
       ...rendered.conditions,
       `(not ${rendered.text})`,
@@ -297,7 +298,10 @@ class PostExpressionRenderer {
       text: result,
       conditions: [
         ...renderedArgs.flatMap((arg) => arg.conditions),
-        relationAtom(callee, [...renderedArgs.map((arg) => arg.text), result]),
+        relationAtom(primRecRelationName(callee), [
+          ...renderedArgs.map((arg) => arg.text),
+          result,
+        ]),
       ],
       variables: [...renderedArgs.flatMap((arg) => arg.variables), result],
       natVariables: [...renderedArgs.flatMap((arg) => arg.natVariables), result],

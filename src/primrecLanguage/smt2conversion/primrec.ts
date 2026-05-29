@@ -9,6 +9,7 @@ import {
   freshName,
   HORN_LOGIC_DECLARATION,
   NAT_DEFINITION,
+  primRecRelationName,
   relationAtom,
   renderHornClause,
 } from './common';
@@ -43,7 +44,7 @@ export function renderFunctionDeclaration(definition: NormalizedFunction): strin
     { length: definition.arity + 1 },
     () => 'Int',
   ).join(' ');
-  return `(declare-fun ${definition.name} (${argumentSorts}) Bool)`;
+  return `(declare-fun ${primRecRelationName(definition.name)} (${argumentSorts}) Bool)`;
 }
 
 export function renderFunctionDefinition(definition: NormalizedFunction): string[] {
@@ -65,7 +66,10 @@ export function renderExpressionDefinition(
   return renderHornClause({
     variables: [...definition.parameters, result, ...builder.temporaries],
     conditions: builder.conditions,
-    head: relationAtom(definition.name, [...definition.parameters, result]),
+    head: relationAtom(primRecRelationName(definition.name), [
+      ...definition.parameters,
+      result,
+    ]),
   });
 }
 
@@ -100,7 +104,10 @@ export function renderGenericPrimitiveRecursion(
       `(= ${counter} 0)`,
       ...baseBuilder.conditions,
     ],
-    head: relationAtom(definition.name, [...definition.parameters, result]),
+    head: relationAtom(primRecRelationName(definition.name), [
+      ...definition.parameters,
+      result,
+    ]),
   });
 
   const stepBuilder = new ClauseBuilder([...definition.parameters, result]);
@@ -108,7 +115,11 @@ export function renderGenericPrimitiveRecursion(
   const previous = stepBuilder.freshName('previous');
   stepBuilder.conditions.push(`(= ${counter} (+ ${previousCounter} 1))`);
   stepBuilder.conditions.push(
-    relationAtom(definition.name, [...fixedParameters, previousCounter, previous]),
+    relationAtom(primRecRelationName(definition.name), [
+      ...fixedParameters,
+      previousCounter,
+      previous,
+    ]),
   );
   stepBuilder.callNamedFunction(
     expression.step,
@@ -118,7 +129,10 @@ export function renderGenericPrimitiveRecursion(
   const stepRule = renderHornClause({
     variables: [...definition.parameters, result, ...stepBuilder.temporaries],
     conditions: stepBuilder.conditions,
-    head: relationAtom(definition.name, [...definition.parameters, result]),
+    head: relationAtom(primRecRelationName(definition.name), [
+      ...definition.parameters,
+      result,
+    ]),
   });
 
   return [baseRule, stepRule];
@@ -154,13 +168,19 @@ function renderPredecessorIdiom(
   const baseRule = renderHornClause({
     variables: [...definition.parameters, result, ...baseBuilder.temporaries],
     conditions: [`(= ${counter} 0)`, ...baseBuilder.conditions],
-    head: relationAtom(definition.name, [...definition.parameters, result]),
+    head: relationAtom(primRecRelationName(definition.name), [
+      ...definition.parameters,
+      result,
+    ]),
   });
 
   const positiveRule = renderHornClause({
     variables: [...definition.parameters, result],
     conditions: [`(> ${counter} 0)`, `(= ${result} (- ${counter} 1))`],
-    head: relationAtom(definition.name, [...definition.parameters, result]),
+    head: relationAtom(primRecRelationName(definition.name), [
+      ...definition.parameters,
+      result,
+    ]),
   });
 
   return [baseRule, positiveRule];
@@ -180,7 +200,10 @@ function renderConstantAfterFirstIdiom(
   const baseRule = renderHornClause({
     variables: [...definition.parameters, result, ...baseBuilder.temporaries],
     conditions: [`(= ${counter} 0)`, ...baseBuilder.conditions],
-    head: relationAtom(definition.name, [...definition.parameters, result]),
+    head: relationAtom(primRecRelationName(definition.name), [
+      ...definition.parameters,
+      result,
+    ]),
   });
 
   const stepBuilder = new ClauseBuilder([...definition.parameters, result]);
@@ -189,7 +212,10 @@ function renderConstantAfterFirstIdiom(
   const afterFirstRule = renderHornClause({
     variables: [...definition.parameters, result, ...stepBuilder.temporaries],
     conditions: stepBuilder.conditions,
-    head: relationAtom(definition.name, [...definition.parameters, result]),
+    head: relationAtom(primRecRelationName(definition.name), [
+      ...definition.parameters,
+      result,
+    ]),
   });
 
   return [baseRule, afterFirstRule];
@@ -215,7 +241,10 @@ function renderLinearRecurrenceIdiom(
     renderHornClause({
       variables: [...definition.parameters, result, ...builder.temporaries],
       conditions: builder.conditions,
-      head: relationAtom(definition.name, [...definition.parameters, result]),
+      head: relationAtom(primRecRelationName(definition.name), [
+        ...definition.parameters,
+        result,
+      ]),
     }),
   ];
 }
@@ -287,6 +316,6 @@ class ClauseBuilder {
       return;
     }
 
-    this.conditions.push(relationAtom(name, [...args, result]));
+    this.conditions.push(relationAtom(primRecRelationName(name), [...args, result]));
   }
 }

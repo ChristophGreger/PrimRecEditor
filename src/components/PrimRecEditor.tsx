@@ -7,7 +7,7 @@ import {
   updatePrimRecMarkers,
 } from '../editor/primRecMonaco';
 import { COMPLETION_EXAMPLE } from '../primrecLanguage/constants';
-import { parseCompleteProgram } from '../primrecLanguage';
+import { printToSmt2 } from '../primrecLanguage';
 
 export function PrimRecEditor() {
   const [code, setCode] = useState(COMPLETION_EXAMPLE);
@@ -23,14 +23,14 @@ export function PrimRecEditor() {
     });
   }, []);
 
-  function handleLoad() {
-    console.log('Parsed primitive recursive program:', parseCompleteProgram(code));
+  function handlePrintToSmt2() {
+    printToSmt2(code);
   }
 
   return (
     <main className="monaco-loader">
-      <button className="load-button" type="button" onClick={handleLoad}>
-        Load
+      <button className="load-button" type="button" onClick={handlePrintToSmt2}>
+        Print SMT2
       </button>
       <section className="editor-pane" aria-label="Monaco editor">
         <Editor

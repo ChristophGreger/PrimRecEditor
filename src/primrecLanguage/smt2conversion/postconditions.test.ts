@@ -24,11 +24,11 @@ post id(x) -> r {
   r == x;
 }`);
 
-    expect(smt2).toContain('(id x r)');
+    expect(smt2).toContain('(_id x r)');
     expect(smt2).toContain('(not (= r x))');
     expect(smt2).toContain('false');
-    expect(smt2).toContain('(_nat x)');
-    expect(smt2).toContain('(_nat r)');
+    expect(smt2).toContain('(nat x)');
+    expect(smt2).toContain('(nat r)');
   });
 
   it('emits one violation clause for each formula statement', () => {
@@ -65,11 +65,25 @@ post double(x) -> r {
   r == id(id(x));
 }`);
 
-    expect(smt2).toContain('(id x callResult)');
-    expect(smt2).toContain('(id callResult callResult_1)');
+    expect(smt2).toContain('(_id x callResult)');
+    expect(smt2).toContain('(_id callResult callResult_1)');
     expect(smt2).toContain('(not (= r callResult_1))');
-    expect(smt2).toContain('(_nat callResult)');
-    expect(smt2).toContain('(_nat callResult_1)');
+    expect(smt2).toContain('(nat callResult)');
+    expect(smt2).toContain('(nat callResult_1)');
+  });
+
+  it('uses prefixed relations for postconditions on SMT-LIB builtin names', () => {
+    const smt2 = completeProgramToHornSmt2(parseValidComplete(`mod(x, y) = x;
+post mod(x, y) -> r {
+  r == mod(x, y);
+  r >= x mod y;
+}`));
+
+    expect(smt2).toContain('(declare-fun _mod (Int Int Int) Bool)');
+    expect(smt2).toContain('(_mod x y r)');
+    expect(smt2).toContain('(_mod x y callResult)');
+    expect(smt2).toContain('(not (>= r (mod x y)))');
+    expect(smt2).not.toContain('(declare-fun mod (Int Int Int) Bool)');
   });
 
   it('renders boolean, comparison, and arithmetic operators in SMT-LIB form', () => {
@@ -116,9 +130,9 @@ post id(x) -> r {
   r == q;
 }`);
 
-    expect(smt2).toContain('(id x callResult)');
+    expect(smt2).toContain('(_id x callResult)');
     expect(smt2).toContain('(= q callResult)');
-    expect(smt2).toContain('(_nat callResult)');
+    expect(smt2).toContain('(nat callResult)');
   });
 
   it('lowers expression-level lets without leaking source names', () => {
@@ -138,8 +152,8 @@ post id(x) -> r {
   exists witness. witness == r;
 }`);
 
-    expect(smt2).toContain('(forall ((d Int)) (=> (_nat d) (=> (<= d x) (<= d r))))');
-    expect(smt2).toContain('(exists ((witness Int)) (and (_nat witness)');
+    expect(smt2).toContain('(forall ((d Int)) (=> (nat d) (=> (<= d x) (<= d r))))');
+    expect(smt2).toContain('(exists ((witness Int)) (and (nat witness)');
     expect(smt2).toContain('(= witness r)');
   });
 
@@ -151,7 +165,7 @@ post id(x) -> r {
 
     expect(smt2).toContain('(forall ((k Int))');
     expect(smt2).toContain('(exists ((callResult Int))');
-    expect(smt2).toContain('(id k callResult)');
+    expect(smt2).toContain('(_id k callResult)');
     expect(smt2).toContain('(<= callResult r)');
   });
 
@@ -188,9 +202,9 @@ post id(x) -> r {
     const smt2 = parts.join('\n\n');
 
     expect(parts[0]).toBe('(set-logic HORN)');
-    expect(smt2).toContain('(define-fun _nat');
-    expect(smt2).toContain('(declare-fun id (Int Int) Bool)');
-    expect(smt2).toContain('(id x r)');
+    expect(smt2).toContain('(define-fun nat');
+    expect(smt2).toContain('(declare-fun _id (Int Int) Bool)');
+    expect(smt2).toContain('(_id x r)');
     expect(smt2).toContain('(declare-fun magic (Int Int) Bool)');
     expect(smt2).toContain('(not (= r x))');
   });

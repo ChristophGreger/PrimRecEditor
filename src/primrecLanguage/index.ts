@@ -58,6 +58,12 @@ export function sourceToHornSmt2(source: string): string {
   return completeProgramToHornSmt2(parseCompleteProgram(source));
 }
 
+export function printToSmt2(source: string): string {
+  const smt2 = sourceToHornSmt2(source);
+  console.log(smt2);
+  return smt2;
+}
+
 export function getFunctionSignatures(source: string): FunctionSignature[] {
   const parsed = parseSyntax(stripPostconditionSectionsForPrimRec(source));
   return parsed.ast.definitions.map((definition) => ({

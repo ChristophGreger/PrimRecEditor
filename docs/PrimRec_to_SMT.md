@@ -37,14 +37,15 @@ The parts are emitted in this order:
 4. Horn clauses for each function body
 ```
 
-The helper predicate is deliberately named with a quoted SMT-LIB symbol:
+The helper predicate is deliberately named `nat`:
 
 ```smt2
-(define-fun _nat ((x Int)) Bool
+(define-fun nat ((x Int)) Bool
   (>= x 0))
 ```
 
-This avoids collisions with user-defined PrimRec functions such as `Nat`.
+User-defined PrimRec functions are emitted with a leading underscore in SMT-LIB,
+so a source function such as `Nat` becomes the relation `_Nat`.
 
 ## 2. Relational Function Encoding
 
@@ -57,7 +58,7 @@ f(x1, ..., xn)
 becomes a relation with one additional result argument:
 
 ```smt2
-(declare-fun f (Int ... Int Int) Bool)
+(declare-fun _f (Int ... Int Int) Bool)
 ```
 
 So:
@@ -69,14 +70,14 @@ plus(x, y) = r
 is represented as:
 
 ```smt2
-(plus x y r)
+(_plus x y r)
 ```
 
 All quantified variables in generated rules are constrained to natural numbers:
 
 ```smt2
-(_nat x)
-(_nat r)
+(nat x)
+(nat r)
 ```
 
 The Horn clauses should be read under CHC / least-fixpoint semantics. Under that
@@ -171,19 +172,19 @@ Generated Horn shape:
            (arg1 Int) (arg0_2 Int))
     (=>
       (and
-        (_nat x)
-        (_nat n)
-        (_nat r)
-        (_nat arg0)
-        (_nat arg0_1)
-        (_nat arg1)
-        (_nat arg0_2)
+        (nat x)
+        (nat n)
+        (nat r)
+        (nat arg0)
+        (nat arg0_1)
+        (nat arg1)
+        (nat arg0_2)
         (= arg0_1 x)
-        (h arg0_1 arg0)
+        (_h arg0_1 arg0)
         (= arg0_2 n)
-        (z arg0_2 arg1)
-        (g arg0 arg1 r))
-      (f x n r))))
+        (_z arg0_2 arg1)
+        (_g arg0 arg1 r))
+      (_f x n r))))
 ```
 
 The exact temporary names are implementation details, but the structure is:
@@ -228,13 +229,13 @@ SMT-LIB shape:
   (forall ((x1 Int) ... (xk Int) (y Int) (r Int))
     (=>
       (and
-        (_nat x1)
+        (nat x1)
         ...
-        (_nat y)
-        (_nat r)
+        (nat y)
+        (nat r)
         (= y 0)
-        (base x1 ... xk r))
-      (f x1 ... xk y r))))
+        (_base x1 ... xk r))
+      (_f x1 ... xk y r))))
 ```
 
 ### Step Rule
@@ -256,16 +257,16 @@ SMT-LIB shape:
            (previousCounter Int) (previous Int))
     (=>
       (and
-        (_nat x1)
+        (nat x1)
         ...
-        (_nat counter)
-        (_nat r)
-        (_nat previousCounter)
-        (_nat previous)
+        (nat counter)
+        (nat r)
+        (nat previousCounter)
+        (nat previous)
         (= counter (+ previousCounter 1))
-        (f x1 ... xk previousCounter previous)
-        (step x1 ... xk previousCounter previous r))
-      (f x1 ... xk counter r))))
+        (_f x1 ... xk previousCounter previous)
+        (_step x1 ... xk previousCounter previous r))
+      (_f x1 ... xk counter r))))
 ```
 
 This is the direct Horn version of primitive recursion.
@@ -308,10 +309,10 @@ Generated shape:
     (=>
       (and
         ...
-        (base x baseResult)
+        (_base x baseResult)
         ; increment expression lowered here
         (= r (+ baseResult (* y increment))))
-      (f x y r))))
+      (_f x y r))))
 ```
 
 For canonical addition:
@@ -474,7 +475,7 @@ base/step arity compatibility
 - Composition is lowered with fresh temporary result variables.
 - Generic `primrec` emits base and step Horn rules.
 - Recognized idioms emit closed Horn rules instead of recursive rules.
-- All quantified variables are constrained with `_nat`.
+- All quantified variables are constrained with `nat`.
 - Fresh names avoid collisions with user parameters such as `r`.
-- The internal natural-number helper uses a quoted name to avoid collisions with
-  user functions.
+- User-defined function relations are prefixed with `_` to avoid collisions with
+  SMT-LIB operators such as `mod`.
