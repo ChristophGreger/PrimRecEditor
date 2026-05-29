@@ -1,4 +1,4 @@
-import type { Diagnostic, SourcePosition, SourceRange, Token } from './types';
+import type { Diagnostic, SourcePosition, SourceRange, Token } from '../types';
 
 export function createPosition(
   offset: number,

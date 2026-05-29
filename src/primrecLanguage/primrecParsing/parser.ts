@@ -9,7 +9,7 @@ import type {
   ProgramAst,
   SourceRange,
   Token,
-} from './types';
+} from '../types';
 
 interface ParserState {
   tokens: Token[];

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parsePrimRecProgram } from '.';
-import type { CoreExpression } from './types';
+import { parsePrimRecProgram } from '..';
+import type { CoreExpression } from '../types';
 
 describe('parsePrimRecProgram valid programs', () => {
   it('normalizes the addition example', () => {

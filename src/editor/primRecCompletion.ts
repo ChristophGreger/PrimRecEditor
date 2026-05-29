@@ -1,5 +1,5 @@
 import { BUILTIN_SIGNATURES } from '../primrecLanguage/constants';
-import { lex } from '../primrecLanguage/lexer';
+import { lex } from '../primrecLanguage/primrecParsing/lexer';
 import type { FunctionSignature, Token } from '../primrecLanguage/types';
 
 export type PrimRecDependencyRole = 'base' | 'step';

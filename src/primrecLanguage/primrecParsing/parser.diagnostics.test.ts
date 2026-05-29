@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePrimRecProgram } from '.';
+import { parsePrimRecProgram } from '..';
 
 function codes(source: string) {
   return parsePrimRecProgram(source).diagnostics.map((item) => item.code);

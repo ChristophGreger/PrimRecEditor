@@ -1,4 +1,4 @@
-import { BUILTIN_SIGNATURES, RESERVED_NAMES } from './constants';
+import { BUILTIN_SIGNATURES, RESERVED_NAMES } from '../constants';
 import { diagnostic } from './ranges';
 import type {
   CallExpression,
@@ -11,7 +11,7 @@ import type {
   NormalizedProgram,
   ProgramAst,
   SourceRange,
-} from './types';
+} from '../types';
 
 interface ValidationContext {
   definition: FunctionDefinition;

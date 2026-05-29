@@ -1,5 +1,5 @@
 import { diagnostic, emptyRangeAt } from './ranges';
-import type { Diagnostic, SourcePosition, Token } from './types';
+import type { Diagnostic, SourcePosition, Token } from '../types';
 
 interface LexerState {
   index: number;

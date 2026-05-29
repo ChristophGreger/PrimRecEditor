@@ -1,6 +1,6 @@
-import { parseSyntax } from './parser';
-import { containsPosition } from './ranges';
-import { validateAndNormalize } from './validation';
+import { parseSyntax } from './primrecParsing/parser';
+import { containsPosition } from './primrecParsing/ranges';
+import { validateAndNormalize } from './primrecParsing/validation';
 import type {
   Expression,
   FunctionDefinition,
