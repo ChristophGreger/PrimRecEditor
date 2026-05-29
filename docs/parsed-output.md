@@ -109,6 +109,111 @@ the normalized functions look like this:
 
 `range` is omitted above for readability. In the real output it is always present and contains 1-based line and column positions.
 
+### Example: Multiplication And Derived Calls
+
+For this source:
+
+```text
+plusBase(x) = x;
+
+plusStep(x, y, previous) =
+  succ(previous);
+
+plus(x, y) = primrec(plusBase, plusStep);
+
+mulBase(x) =
+  0;
+
+mulStep(x, y, previous) =
+  plus(previous, x);
+
+mul(x, y) = primrec(mulBase, mulStep);
+
+square(x) =
+  mul(x, x);
+
+cube(x) =
+  mul(square(x), x);
+```
+
+the multiplication-related normalized functions look like this:
+
+```json
+[
+  {
+    "name": "mulBase",
+    "arity": 1,
+    "parameters": ["x"],
+    "expression": {
+      "kind": "Number",
+      "value": 0
+    },
+    "dependencies": []
+  },
+  {
+    "name": "mulStep",
+    "arity": 3,
+    "parameters": ["x", "y", "previous"],
+    "expression": {
+      "kind": "Composition",
+      "callee": "plus",
+      "args": [
+        { "kind": "Projection", "parameter": "previous", "index": 2 },
+        { "kind": "Projection", "parameter": "x", "index": 0 }
+      ]
+    },
+    "dependencies": ["plus"]
+  },
+  {
+    "name": "mul",
+    "arity": 2,
+    "parameters": ["x", "y"],
+    "expression": {
+      "kind": "PrimitiveRecursion",
+      "base": "mulBase",
+      "step": "mulStep"
+    },
+    "dependencies": ["mulBase", "mulStep"]
+  },
+  {
+    "name": "square",
+    "arity": 1,
+    "parameters": ["x"],
+    "expression": {
+      "kind": "Composition",
+      "callee": "mul",
+      "args": [
+        { "kind": "Projection", "parameter": "x", "index": 0 },
+        { "kind": "Projection", "parameter": "x", "index": 0 }
+      ]
+    },
+    "dependencies": ["mul"]
+  },
+  {
+    "name": "cube",
+    "arity": 1,
+    "parameters": ["x"],
+    "expression": {
+      "kind": "Composition",
+      "callee": "mul",
+      "args": [
+        {
+          "kind": "Composition",
+          "callee": "square",
+          "args": [
+            { "kind": "Projection", "parameter": "x", "index": 0 }
+          ]
+        },
+        { "kind": "Projection", "parameter": "x", "index": 0 }
+      ]
+    },
+    "dependencies": ["mul", "square"]
+  }
+]
+```
+
+The preceding `plusBase`, `plusStep`, and `plus` definitions are needed because `mulStep` calls `plus(previous, x)`. They appear earlier in `program.functions`, and `plus` also appears in `program.signatures`.
+
 ## Core Expressions
 
 The normalized expression tree uses primitive-recursive building blocks plus direct numeric constants for source literals.
