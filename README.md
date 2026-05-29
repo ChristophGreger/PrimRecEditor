@@ -18,4 +18,11 @@ npm run dev
 npm run build
 npm test
 npm run lint
+npm run smt2 -- "id(x) = x; post id(x) -> r { r == x; }"
+```
+
+In the browser console, the same conversion is exposed as:
+
+```js
+primrecToSmt2('id(x) = x; post id(x) -> r { r == x; }')
 ```

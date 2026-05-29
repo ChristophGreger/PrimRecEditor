@@ -6,6 +6,10 @@ import {
   stripPostconditionSectionsForPrimRec,
   type PostconditionParseResult,
 } from './postconditions';
+import {
+  completeProgramToHornSmt2,
+  completeProgramToHornSmt2Parts,
+} from './smt2conversion';
 import type {
   Expression,
   FunctionDefinition,
@@ -44,6 +48,14 @@ export function parseCompleteProgram(source: string): CompleteParseResult {
     postconditions,
     diagnostics: [...primrec.diagnostics, ...postconditions.diagnostics],
   };
+}
+
+export function sourceToHornSmt2Parts(source: string): string[] {
+  return completeProgramToHornSmt2Parts(parseCompleteProgram(source));
+}
+
+export function sourceToHornSmt2(source: string): string {
+  return completeProgramToHornSmt2(parseCompleteProgram(source));
 }
 
 export function getFunctionSignatures(source: string): FunctionSignature[] {
@@ -156,8 +168,12 @@ export {
   recognizeIdiomsInProgram,
 } from './idioms';
 export {
+  completeProgramToHornSmt2,
+  completeProgramToHornSmt2Parts,
+  postconditionProgramToHornSmt2,
+  postconditionProgramToHornSmt2Parts,
   primRecProgramToHornSmt2,
   primRecProgramToHornSmt2Parts,
-} from './hornSmt2';
+} from './smt2conversion';
 export { LANGUAGE_ID } from './constants';
 export * from './postconditions';

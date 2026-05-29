@@ -1,7 +1,7 @@
 # PrimRec to SMT-LIB Horn Encoding
 
 This document describes how normalized PrimRec programs are translated to
-SMT-LIB Horn clauses by `src/primrecLanguage/hornSmt2.ts`.
+SMT-LIB Horn clauses by `src/primrecLanguage/smt2conversion/primrec.ts`.
 
 The translation starts from a `ParseResult`, applies
 `recognizeIdiomsInParseResult(result)`, and then emits a list of SMT-LIB
@@ -15,6 +15,17 @@ The public generator is:
 ```ts
 primRecProgramToHornSmt2Parts(result: ParseResult): string[]
 primRecProgramToHornSmt2(result: ParseResult): string
+```
+
+Postconditions and complete programs are translated by the same
+`smt2conversion` module:
+
+```ts
+postconditionProgramToHornSmt2Parts(result: PostconditionParseResult): string[]
+postconditionProgramToHornSmt2(result: PostconditionParseResult): string
+
+completeProgramToHornSmt2Parts(result: CompleteParseResult): string[]
+completeProgramToHornSmt2(result: CompleteParseResult): string
 ```
 
 The parts are emitted in this order:
@@ -467,4 +478,3 @@ base/step arity compatibility
 - Fresh names avoid collisions with user parameters such as `r`.
 - The internal natural-number helper uses a quoted name to avoid collisions with
   user functions.
-

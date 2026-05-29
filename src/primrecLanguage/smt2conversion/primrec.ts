@@ -1,17 +1,17 @@
-import { recognizeIdiomsInParseResult } from './idioms';
+import { recognizeIdiomsInParseResult } from '../idioms';
 import type {
   CoreExpression,
   NormalizedFunction,
   ParseResult,
   PrimitiveRecursionIdiom,
-} from './types';
-
-export const HORN_LOGIC_DECLARATION = '(set-logic HORN)';
-
-export const NAT_PREDICATE = '|primrec.Nat|';
-
-export const NAT_DEFINITION = `(define-fun ${NAT_PREDICATE} ((x Int)) Bool
-  (>= x 0))`;
+} from '../types';
+import {
+  freshName,
+  HORN_LOGIC_DECLARATION,
+  NAT_DEFINITION,
+  relationAtom,
+  renderHornClause,
+} from './common';
 
 export function primRecProgramToHornSmt2Parts(result: ParseResult): string[] {
   const recognized = recognizeIdiomsInParseResult(result);
@@ -62,11 +62,11 @@ export function renderExpressionDefinition(
   const builder = new ClauseBuilder([...definition.parameters, result]);
   builder.lowerExpression(expression, definition.parameters, result);
 
-  return renderHornClause(
-    [...definition.parameters, result, ...builder.temporaries],
-    builder.conditions,
-    relationAtom(definition.name, [...definition.parameters, result]),
-  );
+  return renderHornClause({
+    variables: [...definition.parameters, result, ...builder.temporaries],
+    conditions: builder.conditions,
+    head: relationAtom(definition.name, [...definition.parameters, result]),
+  });
 }
 
 export function renderPrimitiveRecursionDefinition(
@@ -94,14 +94,14 @@ export function renderGenericPrimitiveRecursion(
 
   const baseBuilder = new ClauseBuilder([...definition.parameters, result]);
   baseBuilder.callNamedFunction(expression.base, fixedParameters, result);
-  const baseRule = renderHornClause(
-    [...definition.parameters, result, ...baseBuilder.temporaries],
-    [
+  const baseRule = renderHornClause({
+    variables: [...definition.parameters, result, ...baseBuilder.temporaries],
+    conditions: [
       `(= ${counter} 0)`,
       ...baseBuilder.conditions,
     ],
-    relationAtom(definition.name, [...definition.parameters, result]),
-  );
+    head: relationAtom(definition.name, [...definition.parameters, result]),
+  });
 
   const stepBuilder = new ClauseBuilder([...definition.parameters, result]);
   const previousCounter = stepBuilder.freshName('previousCounter');
@@ -115,11 +115,11 @@ export function renderGenericPrimitiveRecursion(
     [...fixedParameters, previousCounter, previous],
     result,
   );
-  const stepRule = renderHornClause(
-    [...definition.parameters, result, ...stepBuilder.temporaries],
-    stepBuilder.conditions,
-    relationAtom(definition.name, [...definition.parameters, result]),
-  );
+  const stepRule = renderHornClause({
+    variables: [...definition.parameters, result, ...stepBuilder.temporaries],
+    conditions: stepBuilder.conditions,
+    head: relationAtom(definition.name, [...definition.parameters, result]),
+  });
 
   return [baseRule, stepRule];
 }
@@ -151,17 +151,17 @@ function renderPredecessorIdiom(
 
   const baseBuilder = new ClauseBuilder([...definition.parameters, result]);
   baseBuilder.callNamedFunction(expression.base, fixedParameters, result);
-  const baseRule = renderHornClause(
-    [...definition.parameters, result, ...baseBuilder.temporaries],
-    [`(= ${counter} 0)`, ...baseBuilder.conditions],
-    relationAtom(definition.name, [...definition.parameters, result]),
-  );
+  const baseRule = renderHornClause({
+    variables: [...definition.parameters, result, ...baseBuilder.temporaries],
+    conditions: [`(= ${counter} 0)`, ...baseBuilder.conditions],
+    head: relationAtom(definition.name, [...definition.parameters, result]),
+  });
 
-  const positiveRule = renderHornClause(
-    [...definition.parameters, result],
-    [`(> ${counter} 0)`, `(= ${result} (- ${counter} 1))`],
-    relationAtom(definition.name, [...definition.parameters, result]),
-  );
+  const positiveRule = renderHornClause({
+    variables: [...definition.parameters, result],
+    conditions: [`(> ${counter} 0)`, `(= ${result} (- ${counter} 1))`],
+    head: relationAtom(definition.name, [...definition.parameters, result]),
+  });
 
   return [baseRule, positiveRule];
 }
@@ -177,20 +177,20 @@ function renderConstantAfterFirstIdiom(
 
   const baseBuilder = new ClauseBuilder([...definition.parameters, result]);
   baseBuilder.callNamedFunction(expression.base, fixedParameters, result);
-  const baseRule = renderHornClause(
-    [...definition.parameters, result, ...baseBuilder.temporaries],
-    [`(= ${counter} 0)`, ...baseBuilder.conditions],
-    relationAtom(definition.name, [...definition.parameters, result]),
-  );
+  const baseRule = renderHornClause({
+    variables: [...definition.parameters, result, ...baseBuilder.temporaries],
+    conditions: [`(= ${counter} 0)`, ...baseBuilder.conditions],
+    head: relationAtom(definition.name, [...definition.parameters, result]),
+  });
 
   const stepBuilder = new ClauseBuilder([...definition.parameters, result]);
   stepBuilder.conditions.push(`(> ${counter} 0)`);
   stepBuilder.lowerExpression(idiom.expression, definition.parameters, result);
-  const afterFirstRule = renderHornClause(
-    [...definition.parameters, result, ...stepBuilder.temporaries],
-    stepBuilder.conditions,
-    relationAtom(definition.name, [...definition.parameters, result]),
-  );
+  const afterFirstRule = renderHornClause({
+    variables: [...definition.parameters, result, ...stepBuilder.temporaries],
+    conditions: stepBuilder.conditions,
+    head: relationAtom(definition.name, [...definition.parameters, result]),
+  });
 
   return [baseRule, afterFirstRule];
 }
@@ -212,53 +212,12 @@ function renderLinearRecurrenceIdiom(
   builder.conditions.push(`(= ${result} (+ ${baseResult} (* ${counter} ${increment})))`);
 
   return [
-    renderHornClause(
-      [...definition.parameters, result, ...builder.temporaries],
-      builder.conditions,
-      relationAtom(definition.name, [...definition.parameters, result]),
-    ),
+    renderHornClause({
+      variables: [...definition.parameters, result, ...builder.temporaries],
+      conditions: builder.conditions,
+      head: relationAtom(definition.name, [...definition.parameters, result]),
+    }),
   ];
-}
-
-function renderHornClause(
-  variables: readonly string[],
-  conditions: readonly string[],
-  head: string,
-): string {
-  const uniqueVariables = [...new Set(variables)];
-  const quantified = uniqueVariables.map((name) => `(${name} Int)`).join(' ');
-  const body = renderAnd([
-    ...uniqueVariables.map((name) => `(${NAT_PREDICATE} ${name})`),
-    ...conditions,
-  ]);
-
-  return `(assert
-  (forall (${quantified})
-    (=> ${body}
-        ${head})))`;
-}
-
-function renderAnd(items: readonly string[]): string {
-  if (items.length === 1) {
-    return items[0];
-  }
-
-  return `(and ${items.join('\n             ')})`;
-}
-
-function relationAtom(name: string, args: readonly string[]): string {
-  return `(${name} ${args.join(' ')})`;
-}
-
-function freshName(base: string, used: Set<string>): string {
-  let candidate = base;
-  let index = 1;
-  while (used.has(candidate)) {
-    candidate = `${base}_${index}`;
-    index += 1;
-  }
-  used.add(candidate);
-  return candidate;
 }
 
 class ClauseBuilder {

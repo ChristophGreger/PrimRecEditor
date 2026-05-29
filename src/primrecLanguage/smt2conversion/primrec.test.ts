@@ -3,7 +3,7 @@ import {
   parsePrimRecProgram,
   primRecProgramToHornSmt2,
   primRecProgramToHornSmt2Parts,
-} from '.';
+} from '..';
 
 function generate(source: string): string {
   const parsed = parsePrimRecProgram(source);
